@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#FAF8F5">
+<title>petal — baby tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #FAF8F5;
+  --bg2:      #F2EFE9;
+  --surface:  #FFFFFF;
+  --border:   #E8E3DC;
+  --border2:  #D6CFC5;
+
+  --ink:      #1A1410;
+  --ink2:     #6B6159;
+  --ink3:     #A89E94;
+
+  --blush:    #E8796A;   /* diaper / warm coral */
+  --blush-bg: #FDF0EE;
+  --honey:    #D4963A;   /* feeding / amber */
+  --honey-bg: #FDF6EA;
+  --plum:     #8B6BB1;   /* sleep / violet */
+  --plum-bg:  #F4EFFA;
+  --fern:     #4A967A;   /* pumping / sage */
+  --fern-bg:  #EBF6F1;
+  --sky:      #4A86C8;   /* meds / blue */
+  --sky-bg:   #EDF3FC;
+
+  --accent:   #C96B5A;   /* primary CTA */
+
+  --r-xl: 28px;
+  --r-lg: 20px;
+  --r-md: 14px;
+  --r-sm: 10px;
+
+  --shadow-sm: 0 1px 3px rgba(26,20,16,0.06), 0 4px 12px rgba(26,20,16,0.04);
+  --shadow-md: 0 2px 8px rgba(26,20,16,0.06), 0 8px 24px rgba(26,20,16,0.08);
+  --shadow-up: 0 -1px 0 rgba(26,20,16,0.06), 0 -8px 24px rgba(26,20,16,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); }
+
+/* ─── PAGE SYSTEM ─── */
+.page { position: fixed; inset: 0; overflow-y: auto; overflow-x: hidden; display: none; -webkit-overflow-scrolling: touch; }
+.page.active { display: block; }
+
+/* ─── PIN SCREEN ─── */
+#pg-pin {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 36px; padding: 60px 32px; background: var(--bg);
+  min-height: 100vh;
+}
+.pin-mark {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--blush-bg); border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+  box-shadow: var(--shadow-sm);
+}
+.pin-brand h1 {
+  font-family: 'Fraunces', serif; font-size: 2.6rem; font-weight: 400;
+  color: var(--ink); letter-spacing: -1px; text-align: center;
+}
+.pin-brand p { font-size: 0.85rem; color: var(--ink3); text-align: center; margin-top: 6px; }
+.pin-dots { display: flex; gap: 14px; }
+.pin-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid var(--border2); background: transparent; transition: all 0.2s;
+}
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); transform: scale(1.15); }
+.pin-err { font-size: 0.78rem; color: var(--blush); font-weight: 500; min-height: 16px; }
+.pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 260px; }
+.pin-key {
+  height: 68px; border-radius: var(--r-lg); border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--ink);
+  font-family: 'DM Sans', sans-serif; font-size: 1.5rem; font-weight: 400;
+  cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow-sm);
+}
+.pin-key:active { background: var(--bg2); transform: scale(0.94); }
+.pin-key.del { color: var(--accent); font-size: 1.1rem; }
+
+/* ─── HOME ─── */
+#pg-home { background: var(--bg); padding-bottom: 96px; }
+
+.home-status-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 60px 24px 0;
+}
+.sync-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.7rem; font-weight: 500; color: var(--ink3);
+  box-shadow: var(--shadow-sm);
+}
+.sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--fern); animation: spulse 2.5s infinite; }
+.sdot.off { background: var(--honey); animation: none; }
+@keyframes spulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.lock-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.9rem; box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+}
+.lock-btn:active { background: var(--bg2); transform: scale(0.93); }
+
+/* HERO SECTION */
+.home-hero {
+  padding: 32px 24px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+}
+.home-avatar-row { display: flex; align-items: center; gap: 16px; }
+.home-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #F5C4BE, #D4B5E8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; overflow: hidden; cursor: pointer;
+  border: 2px solid var(--surface); box-shadow: var(--shadow-md);
+  transition: transform 0.2s; flex-shrink: 0;
+}
+.home-avatar:active { transform: scale(0.95); }
+.home-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.home-name-block {}
+.home-greeting { font-size: 0.75rem; font-weight: 500; color: var(--ink3); letter-spacing: 0.3px; margin-bottom: 3px; }
+.home-name {
+  font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 400;
+  color: var(--ink); letter-spacing: -0.5px; line-height: 1;
+}
+.home-age-tag {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--blush-bg); border: 1px solid #F0C4BD;
+  font-size: 0.72rem; font-weight: 500; color: var(--blush);
+}
+
+/* TODAY RING */
+.today-bar {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 20px 24px 0;
+}
+.today-cell {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); padding: 16px 12px 14px;
+  text-align: center; cursor: pointer; transition: all 0.18s;
+  box-shadow: var(--shadow-sm);
+}
+.today-cell:active { transform: scale(0.96); }
+.today-cell.c-blush  { border-color: #F0C4BD; background: var(--blush-bg); }
+.today-cell.c-honey  { border-color: #E8D0A0; background: var(--honey-bg); }
+.today-cell.c-plum   { border-color: #C8B4DC; background: var(--plum-bg); }
+.tc-num {
+  font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 400;
+  line-height: 1; letter-spacing: -1px;
+}
+.today-cell.c-blush .tc-num  { color: var(--blush); }
+.today-cell.c-honey .tc-num  { color: var(--honey); }
+.today-cell.c-plum  .tc-num  { color: var(--plum); }
+.tc-lbl { font-size: 0.65rem; font-weight: 600; color: var(--ink3); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.6px; }
+
+/* SECTION DIVIDER */
+.sec-label {
+  padding: 24px 24px 8px; font-size: 0.65rem; font-weight: 600;
+  color: var(--ink3); text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* NAV TILES */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
+.tile {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-xl); padding: 18px 16px 16px;
+  cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 10px; position: relative;
+}
+.tile:active { transform: scale(0.97); }
+.tile-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+}
+.tile-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+.tile-sub { font-size: 0.72rem; color: var(--ink3); margin-top: -4px; line-height: 1.4; }
+.tile-arrow {
+  position: absolute; top: 16px; right: 14px;
+  font-size: 0.7rem; color: var(--ink3);
+}
+.tile-accent-bar { height: 2px; border-radius: 2px; margin-top: 2px; }
+
+.tile.t-blush .tile-icon { background: var(--blush-bg); }
+.tile.t-blush .tile-accent-bar { background: var(--blush); }
+.tile.t-honey .tile-icon { background: var(--honey-bg); }
+.tile.t-honey .tile-accent-bar { background: var(--honey); }
+.tile.t-plum  .tile-icon { background: var(--plum-bg);  }
+.tile.t-plum  .tile-accent-bar  { background: var(--plum); }
+.tile.t-fern  .tile-icon { background: var(--fern-bg);  }
+.tile.t-fern  .tile-accent-bar  { background: var(--fern); }
+
+.tile-wide {
+  grid-column: 1/-1; flex-direction: row; align-items: center;
+  padding: 16px 18px; gap: 14px; border-radius: var(--r-lg);
+}
+.tile-wide .tile-icon { flex-shrink: 0; }
+.tile-wide .tile-body { flex: 1; }
+.tile-wide .tile-accent-bar { display: none; }
+.tile-wide .tile-arrow { position: static; margin-left: auto; }
+.tile.t-sky  .tile-icon { background: var(--sky-bg); }
+.tile.t-muted .tile-icon { background: var(--bg2); }
+
+/* RECENT */
+.recent-wrap { padding: 0 16px; }
+
+/* ─── INNER PAGES ─── */
+.inner-page { background: var(--bg); min-height: 100vh; padding-bottom: 96px; }
+
+.inner-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 56px 20px 20px;
+}
+.back-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface); border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; color: var(--ink2);
+  box-shadow: var(--shadow-sm); transition: all 0.15s; flex-shrink: 0;
+}
+.back-btn:active { background: var(--bg2); transform: scale(0.93); }
+.ih-icon {
+  width: 40px; height: 40px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.inner-title { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 400; letter-spacing: -0.3px; }
+.inner-sub { font-size: 0.75rem; color: var(--ink3); margin-top: 1px; }
+
+/* CARD */
+.card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-xl); padding: 20px;
+  margin: 0 16px 12px; box-shadow: var(--shadow-sm);
+}
+.card-label {
+  font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--ink3); margin-bottom: 14px;
+}
+
+/* FORM */
+.form-grid { display: grid; gap: 10px; }
+.form-grid.cols2 { grid-template-columns: 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.67rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink3); }
+.field input, .field select, .field textarea {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--r-md); padding: 11px 13px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--ink);
+  outline: none; transition: border-color 0.18s, background 0.18s;
+  -webkit-appearance: none; appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--accent); background: var(--surface);
+}
+.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A89E94' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+.field textarea { resize: vertical; min-height: 72px; }
+
+.btn-primary {
+  width: 100%; padding: 15px; margin-top: 14px;
+  border-radius: var(--r-md); border: none; cursor: pointer;
+  background: var(--accent); color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(201,107,90,0.3); transition: all 0.18s;
+}
+.btn-primary:active { transform: scale(0.98); background: #b85e4e; }
+.btn-ghost {
+  padding: 8px 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--ink2); font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+}
+.btn-ghost:hover { background: var(--bg2); }
+
+/* LOG LIST */
+.log-list { display: flex; flex-direction: column; gap: 8px; }
+.log-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--bg); border-radius: var(--r-md);
+  border: 1.5px solid var(--border); transition: all 0.15s;
+}
+.li-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.li-body { flex: 1; min-width: 0; }
+.li-title { font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.li-sub { font-size: 0.7rem; color: var(--ink3); margin-top: 1px; }
+.li-time { font-size: 0.68rem; color: var(--ink3); font-weight: 500; flex-shrink: 0; }
+.li-del { background: none; border: none; cursor: pointer; color: var(--ink3); font-size: 0.85rem; padding: 4px; flex-shrink: 0; transition: color 0.15s; opacity: 0.5; }
+.li-del:hover { color: var(--blush); opacity: 1; }
+
+/* PILL */
+.pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.67rem; font-weight: 600; }
+.p-blush { background: var(--blush-bg); color: var(--blush); }
+.p-honey { background: var(--honey-bg); color: var(--honey); }
+.p-plum  { background: var(--plum-bg);  color: var(--plum);  }
+.p-fern  { background: var(--fern-bg);  color: var(--fern);  }
+.p-sky   { background: var(--sky-bg);   color: var(--sky);   }
+
+/* STAT ROW */
+.stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+.sbox { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 14px 8px; text-align: center; }
+.sbox-num { font-family: 'Fraunces', serif; font-size: 1.7rem; font-weight: 400; letter-spacing: -1px; }
+.sbox-lbl { font-size: 0.6rem; font-weight: 600; color: var(--ink3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* CHARTS */
+.bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 72px; padding: 4px 0; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bar { width: 100%; border-radius: 3px 3px 0 0; transition: height 0.5s ease, background 0.2s; }
+.bar-lbl { font-size: 0.46rem; color: var(--ink3); }
+
+/* GROWTH BAR */
+.growth-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.gbr-lbl { font-size: 0.68rem; color: var(--ink3); width: 48px; flex-shrink: 0; text-align: right; }
+.gbr-track { flex: 1; background: var(--bg2); border-radius: 6px; height: 22px; overflow: hidden; border: 1.5px solid var(--border); }
+.gbr-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; transition: width 0.8s ease; }
+.gbr-fill span { font-size: 0.62rem; font-weight: 600; color: white; }
+
+/* PHOTO */
+.photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.photo-thumb { aspect-ratio: 1; border-radius: 12px; object-fit: cover; width: 100%; cursor: pointer; transition: transform 0.2s; }
+.photo-add {
+  aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed var(--border2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; gap: 4px; background: var(--bg); transition: all 0.18s;
+}
+.photo-add:active { background: var(--bg2); }
+.photo-add .pa-icon { font-size: 1.3rem; }
+.photo-add .pa-lbl { font-size: 0.6rem; font-weight: 600; color: var(--ink3); }
+
+/* VISIT */
+.visit-card {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--r-md); padding: 14px; margin-bottom: 10px;
+  border-left: 3px solid var(--plum);
+}
+
+/* SETTINGS ROW */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-md); margin-bottom: 8px; box-shadow: var(--shadow-sm);
+}
+.sr-left { display: flex; align-items: center; gap: 12px; }
+.sr-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.sr-title { font-size: 0.87rem; font-weight: 600; }
+.sr-sub { font-size: 0.7rem; color: var(--ink3); margin-top: 1px; }
+
+/* INSIGHT */
+.insight-block { border-radius: var(--r-md); padding: 14px; margin-bottom: 10px; border: 1.5px solid var(--border); }
+.ib-warm { background: var(--blush-bg); border-color: #F0C4BD; }
+.ib-cool { background: var(--fern-bg);  border-color: #BDE4D4; }
+.ib-title { font-size: 0.8rem; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.ib-text { font-size: 0.8rem; line-height: 1.6; color: var(--ink2); }
+.ib-hl { font-weight: 600; color: var(--accent); }
+
+/* EMPTY */
+.empty { text-align: center; padding: 32px 16px; color: var(--ink3); }
+.empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.4; }
+.empty p { font-size: 0.82rem; line-height: 1.5; }
+
+/* ─── BOTTOM NAV ─── */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  display: none;
+  background: rgba(250,248,245,0.94); backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--border);
+  padding: 8px 4px max(16px, env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-up);
+}
+.bnav { display: flex; justify-content: space-around; }
+.bnav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 12px; border: none; background: none; cursor: pointer;
+  border-radius: 12px; transition: all 0.15s; min-width: 54px;
+  font-family: 'DM Sans', sans-serif;
+}
+.bnav-icon { font-size: 1.25rem; transition: transform 0.2s; }
+.bnav-lbl { font-size: 0.56rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.4px; transition: color 0.15s; }
+.bnav-item.active .bnav-lbl { color: var(--accent); }
+.bnav-item.active .bnav-icon { transform: scale(1.12); }
+/* FAB */
+.bnav-fab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 0 12px 6px; border: none; background: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; min-width: 54px;
+}
+.fab-circle {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin-top: -22px;
+  box-shadow: 0 4px 18px rgba(201,107,90,0.4);
+  transition: all 0.18s;
+}
+.bnav-fab:active .fab-circle { transform: scale(0.94); background: #b85e4e; }
+.bnav-fab .bnav-lbl { font-size: 0.56rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+
+/* ─── BOTTOM SHEET ─── */
+.sheet-overlay {
+  position: fixed; inset: 0; z-index: 800;
+  background: rgba(26,20,16,0.25); backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: all; }
+.sheet {
+  background: var(--surface); border-radius: 28px 28px 0 0;
+  padding: 0 20px 40px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(100%); transition: transform 0.34s cubic-bezier(0.32,0.72,0,1);
+  border-top: 1.5px solid var(--border);
+}
+.sheet-overlay.open .sheet { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 16px auto 22px; }
+.sheet-title { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 400; margin-bottom: 18px; letter-spacing: -0.3px; }
+
+/* QL type picker */
+.ql-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 20px; }
+.ql-btn {
+  padding: 12px 6px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-family: 'DM Sans', sans-serif; font-size: 0.76rem; font-weight: 600;
+  color: var(--ink3); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  transition: all 0.15s;
+}
+.ql-btn span.qe { font-size: 1.2rem; }
+.ql-btn.active { background: var(--blush-bg); border-color: #F0C4BD; color: var(--accent); }
+.ql-btn:active { transform: scale(0.96); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 108px; left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--ink); color: white;
+  padding: 11px 22px; border-radius: 24px;
+  font-size: 0.8rem; font-weight: 500;
+  z-index: 9999; opacity: 0; transition: all 0.24s;
+  pointer-events: none; white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* AI */
+.ai-loading { display: flex; align-items: center; gap: 10px; padding: 14px; color: var(--ink3); font-size: 0.84rem; }
+.ai-dots span { display: inline-block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: aidot 1.2s infinite; margin: 0 2px; }
+.ai-dots span:nth-child(2){animation-delay:0.2s} .ai-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes aidot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+/* PAGE ENTRANCE */
+@keyframes pageIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.page.active { animation: pageIn 0.3s ease; }
+
+@media(min-width:480px){
+  #bottom-nav { left:50%; transform:translateX(-50%); max-width:480px; border-radius:0; }
+  .sheet { max-width:480px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ PIN ═══════ -->
+<div class="page" id="pg-pin" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;padding:60px 32px;background:var(--bg);min-height:100%;overflow-y:auto;">
+  <div class="pin-mark">🌸</div>
+  <div class="pin-brand">
+    <h1>petal</h1>
+    <p id="pin-subtitle">Enter your PIN to continue</p>
+  </div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-err" id="pin-error"></div>
+  <div class="pin-grid">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+</div>
+
+<!-- ═══════ HOME ═══════ -->
+<div class="page" id="pg-home">
+
+  <!-- Status bar -->
+  <div class="home-status-bar">
+    <div class="sync-pill">
+      <div class="sdot" id="sync-dot"></div>
+      <span id="sync-lbl">Live</span>
+    </div>
+    
+  </div>
+
+  <!-- Hero -->
+  <div class="home-hero">
+    <div class="home-avatar-row">
+      <div class="home-avatar" id="home-avatar" onclick="document.getElementById('avatar-upload').click()">🌸</div>
+      <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="setAvatar(event)">
+      <div class="home-name-block">
+        <div class="home-greeting">Good day</div>
+        <div class="home-name" id="home-name">Baby Girl</div>
+        <div class="home-age-tag" id="home-age" style="display:none"><span id="home-age-text"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today stats -->
+  <div class="today-bar">
+    <div class="today-cell c-blush" onclick="goPage('pg-diaper')">
+      <div class="tc-num" id="hs-diapers">0</div>
+      <div class="tc-lbl">Diapers</div>
+    </div>
+    <div class="today-cell c-honey" onclick="goPage('pg-feeding')">
+      <div class="tc-num" id="hs-feedings">0</div>
+      <div class="tc-lbl">Feedings</div>
+    </div>
+    <div class="today-cell c-plum" onclick="goPage('pg-sleep')">
+      <div class="tc-num" id="hs-sleeps">0</div>
+      <div class="tc-lbl">Sleep</div>
+    </div>
+  </div>
+
+  <!-- Track section -->
+  <div class="sec-label">Track</div>
+  <div class="tiles">
+    <div class="tile t-blush" onclick="goPage('pg-diaper')">
+      <div class="tile-arrow">→</div>
+      <div class="tile-icon">👶</div>
+      <div>
+        <div class="tile-title">Diaper</div>
+        <div class="tile-sub" id="nc-diaper">Tap to log</div>
+      </div>
+      <div class="tile-accent-bar"></div>
+    </div>
+    <div class="tile t-honey" onclick="goPage('pg-feeding')">
+      <div class="tile-arrow">→</div>
+      <div class="tile-icon">🍼</div>
+      <div>
+        <div class="tile-title">Feeding</div>
+        <div class="tile-sub" id="nc-feeding">Tap to log</div>
+      </div>
+      <div class="tile-accent-bar"></div>
+    </div>
+    <div class="tile t-plum" onclick="goPage('pg-sleep')">
+      <div class="tile-arrow">→</div>
+      <div class="tile-icon">😴</div>
+      <div>
+        <div class="tile-title">Sleep</div>
+        <div class="tile-sub" id="nc-sleep">Tap to log</div>
+      </div>
+      <div class="tile-accent-bar"></div>
+    </div>
+    <div class="tile t-fern" onclick="goPage('pg-pumping')">
+      <div class="tile-arrow">→</div>
+      <div class="tile-icon">🤱</div>
+      <div>
+        <div class="tile-title">Pumping</div>
+        <div class="tile-sub" id="nc-pumping">Tap to log</div>
+      </div>
+      <div class="tile-accent-bar"></div>
+    </div>
+    <div class="tile t-sky tile-wide" onclick="goPage('pg-medication')">
+      <div class="tile-icon">💊</div>
+      <div class="tile-body">
+        <div class="tile-title">Medication & Vitamins</div>
+        <div class="tile-sub">Baby & mom doses</div>
+      </div>
+      <div class="tile-arrow">→</div>
+    </div>
+    <div class="tile t-muted tile-wide" onclick="goPage('pg-growth')">
+      <div class="tile-icon">📏</div>
+      <div class="tile-body">
+        <div class="tile-title">Growth Tracking</div>
+        <div class="tile-sub">Weight, height, head</div>
+      </div>
+      <div class="tile-arrow">→</div>
+    </div>
+    <div class="tile t-muted tile-wide" onclick="goPage('pg-visits')">
+      <div class="tile-icon">🏥</div>
+      <div class="tile-body">
+        <div class="tile-title">Doctor Visits</div>
+        <div class="tile-sub">Records & summaries</div>
+      </div>
+      <div class="tile-arrow">→</div>
+    </div>
+  </div>
+
+  <!-- Recent -->
+  <div class="sec-label">Recent</div>
+  <div class="recent-wrap" id="home-recent">
+    <div class="empty"><div class="empty-icon">✦</div><p>Your activity will appear here</p></div>
+  </div>
+
+</div><!-- /home -->
+
+
+<!-- ═══════ DIAPER ═══════ -->
+<div class="page" id="pg-diaper">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--blush-bg)">👶</div>
+      <div><div class="inner-title">Diaper</div><div class="inner-sub" id="diaper-count-sub">0 today</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log a change</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Time</label><input type="datetime-local" id="diaper-time"></div>
+        <div class="field"><label>Type</label><select id="diaper-type"><option value="wet">💧 Wet</option><option value="dirty">💩 Dirty</option><option value="both">💩💧 Both</option><option value="dry">✅ Dry</option></select></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field"><label>Notes</label><input type="text" id="diaper-notes" placeholder="Color, consistency…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('diaper')">Save Change</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-label" style="margin-bottom:0">History</div>
+        <span class="pill p-blush" id="diaper-count">0 today</span>
+      </div>
+      <div id="diaper-log" class="log-list"><div class="empty"><div class="empty-icon">👶</div><p>Nothing yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ FEEDING ═══════ -->
+<div class="page" id="pg-feeding">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--honey-bg)">🍼</div>
+      <div><div class="inner-title">Feeding</div><div class="inner-sub" id="feeding-count-sub">0 today</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log a feeding</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Time</label><input type="datetime-local" id="feeding-time"></div>
+        <div class="field"><label>Type</label><select id="feeding-type"><option value="breast-left">🤱 Breast (L)</option><option value="breast-right">🤱 Breast (R)</option><option value="breast-both">🤱 Both</option><option value="bottle-breast">🍼 Bottle (BM)</option><option value="bottle-formula">🍼 Formula</option></select></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Min / ml</label><input type="number" id="feeding-amount" placeholder="15"></div>
+        <div class="field"><label>Notes</label><input type="text" id="feeding-notes" placeholder="Latching, mood…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('feeding')">Save Feeding</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-label" style="margin-bottom:0">History</div>
+        <span class="pill p-honey" id="feeding-count">0 today</span>
+      </div>
+      <div id="feeding-log" class="log-list"><div class="empty"><div class="empty-icon">🍼</div><p>Nothing yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLEEP ═══════ -->
+<div class="page" id="pg-sleep">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--plum-bg)">😴</div>
+      <div><div class="inner-title">Sleep</div><div class="inner-sub" id="sleep-count-sub">0 today</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log sleep</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Start</label><input type="datetime-local" id="sleep-start"></div>
+        <div class="field"><label>End</label><input type="datetime-local" id="sleep-end"></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Location</label><select id="sleep-location"><option value="crib">🛏 Crib</option><option value="bassinet">🛏 Bassinet</option><option value="arms">🤗 In Arms</option><option value="stroller">🚼 Stroller</option><option value="car">🚗 Car</option></select></div>
+        <div class="field"><label>Notes</label><input type="text" id="sleep-notes" placeholder="How she slept…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('sleep')">Save Sleep</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-label" style="margin-bottom:0">History</div>
+        <span class="pill p-plum" id="sleep-count">0 today</span>
+      </div>
+      <div id="sleep-log" class="log-list"><div class="empty"><div class="empty-icon">😴</div><p>Nothing yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PUMPING ═══════ -->
+<div class="page" id="pg-pumping">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--fern-bg)">🤱</div>
+      <div><div class="inner-title">Pumping</div><div class="inner-sub" id="pumping-count-sub">0 today</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log session</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Time</label><input type="datetime-local" id="pump-time"></div>
+        <div class="field"><label>Duration (min)</label><input type="number" id="pump-duration" placeholder="20"></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Left (ml)</label><input type="number" id="pump-left" placeholder="0"></div>
+        <div class="field"><label>Right (ml)</label><input type="number" id="pump-right" placeholder="0"></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field"><label>Notes</label><input type="text" id="pump-notes" placeholder="Notes…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('pumping')">Save Session</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-label" style="margin-bottom:0">History</div>
+        <span class="pill p-fern" id="pump-count">0 today</span>
+      </div>
+      <div id="pumping-log" class="log-list"><div class="empty"><div class="empty-icon">🤱</div><p>Nothing yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MEDICATION ═══════ -->
+<div class="page" id="pg-medication">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--sky-bg)">💊</div>
+      <div><div class="inner-title">Medication</div><div class="inner-sub">Meds & vitamins</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log medication</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Time</label><input type="datetime-local" id="med-time"></div>
+        <div class="field"><label>Given to</label><select id="med-who"><option value="baby">👶 Baby</option><option value="mom">👩 Mom</option></select></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Medication</label><input type="text" id="med-name" placeholder="e.g. Vitamin D"></div>
+        <div class="field"><label>Dose</label><input type="text" id="med-dose" placeholder="0.5ml"></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field"><label>Notes</label><input type="text" id="med-notes" placeholder="Reaction, reminder…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('medication')">Save Medication</button>
+    </div>
+    <div class="card">
+      <div class="card-label">History</div>
+      <div id="medication-log" class="log-list"><div class="empty"><div class="empty-icon">💊</div><p>Nothing yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ GROWTH ═══════ -->
+<div class="page" id="pg-growth">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--plum-bg)">📏</div>
+      <div><div class="inner-title">Growth</div><div class="inner-sub">Measurements over time</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log measurement</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Date</label><input type="date" id="growth-date"></div>
+        <div class="field"><label>Age label</label><input type="text" id="growth-age" placeholder="2 weeks"></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Weight (kg)</label><input type="number" step="0.01" id="growth-weight" placeholder="3.5"></div>
+        <div class="field"><label>Height (cm)</label><input type="number" step="0.1" id="growth-height" placeholder="50"></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Head (cm)</label><input type="number" step="0.1" id="growth-head" placeholder="34"></div>
+        <div class="field"><label>Notes</label><input type="text" id="growth-notes" placeholder="Doctor visit…"></div>
+      </div>
+      <button class="btn-primary" onclick="logEntry('growth')">Save Measurement</button>
+    </div>
+    <div class="card">
+      <div class="card-label">Growth Chart</div>
+      <div id="growth-chart-area"><div class="empty"><div class="empty-icon">📏</div><p>Add measurements to see chart</p></div></div>
+      <div id="growth-log" class="log-list" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ DOCTOR VISITS ═══════ -->
+<div class="page" id="pg-visits">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--blush-bg)">🏥</div>
+      <div><div class="inner-title">Doctor Visits</div><div class="inner-sub" id="visits-sub">All records</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Log a visit</div>
+      <div class="form-grid cols2">
+        <div class="field"><label>Date</label><input type="date" id="visit-date"></div>
+        <div class="field"><label>Type</label><select id="visit-type"><option value="checkup">🩺 Well-Baby</option><option value="nurse">👩‍⚕️ Nurse</option><option value="sick">🤒 Sick Visit</option><option value="vaccine">💉 Vaccine</option><option value="specialist">🔬 Specialist</option><option value="other">📋 Other</option></select></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Doctor / Clinic</label><input type="text" id="visit-doctor" placeholder="Dr. Cohen…"></div>
+        <div class="field"><label>Weight (kg)</label><input type="number" step="0.01" id="visit-weight" placeholder="3.8"></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field"><label>Notes / Summary</label><textarea id="visit-notes" placeholder="Doctor's advice, next steps…"></textarea></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field">
+          <label>Attach Photos</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <div class="photo-add" style="width:68px;height:68px;" onclick="document.getElementById('visit-photo-upload').click()">
+              <div class="pa-icon">📄</div><div class="pa-lbl">Add</div>
+            </div>
+            <div id="visit-photo-previews" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;"></div>
+          </div>
+          <input type="file" id="visit-photo-upload" accept="image/*" multiple style="display:none" onchange="addVisitPhotos(event)">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="logVisit()">Save Visit Record</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-label" style="margin-bottom:0">History</div>
+        <span class="pill p-plum" id="visit-count">0 visits</span>
+      </div>
+      <div id="visit-log"><div class="empty"><div class="empty-icon">🏥</div><p>No visits logged yet</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ANALYSIS ═══════ -->
+<div class="page" id="pg-analysis">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--fern-bg)">📊</div>
+      <div><div class="inner-title">Insights</div><div class="inner-sub" id="today-date"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Today</div>
+      <div class="stat-row">
+        <div class="sbox"><div class="sbox-num" style="color:var(--blush)" id="an-diapers">0</div><div class="sbox-lbl">Diapers</div></div>
+        <div class="sbox"><div class="sbox-num" style="color:var(--honey)" id="an-feedings">0</div><div class="sbox-lbl">Feedings</div></div>
+        <div class="sbox"><div class="sbox-num" style="color:var(--plum)"  id="an-sleeps">0</div><div class="sbox-lbl">Sleep</div></div>
+      </div>
+      <div class="card-label" style="margin-top:4px">24h Activity</div>
+      <div id="activity-chart" class="bar-chart"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="card-label" style="margin-bottom:0">AI Insights</div>
+        <button class="btn-ghost" onclick="runAnalysis()">↻ Refresh</button>
+      </div>
+      <div id="analysis-content"><div class="empty"><div class="empty-icon">✦</div><p>Tap Refresh for AI-powered insights</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PHOTOS ═══════ -->
+<div class="page" id="pg-photos">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="ih-icon" style="background:var(--honey-bg)">📸</div>
+      <div><div class="inner-title">Memories</div><div class="inner-sub" id="photos-sub">0 photos</div></div>
+    </div>
+    <div class="card">
+      <div class="field" style="margin-bottom:14px">
+        <label>Caption for next photo</label>
+        <input type="text" id="photo-caption" placeholder="First smile, 2 weeks old…">
+      </div>
+      <div class="photo-grid" id="photo-grid">
+        <div class="photo-add" onclick="document.getElementById('photo-upload').click()">
+          <div class="pa-icon">📷</div><div class="pa-lbl">Add Photo</div>
+        </div>
+      </div>
+      <input type="file" id="photo-upload" accept="image/*" style="display:none" onchange="addPhoto(event)">
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SETTINGS ═══════ -->
+<div class="page" id="pg-settings">
+  <div class="inner-page">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div><div class="inner-title">Settings</div><div class="inner-sub">Profile & preferences</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Baby Profile</div>
+      <div class="form-grid">
+        <div class="field"><label>Name</label><input type="text" id="baby-name" placeholder="Your baby girl's name"></div>
+      </div>
+      <div class="form-grid cols2" style="margin-top:10px">
+        <div class="field"><label>Date of Birth</label><input type="date" id="baby-dob"></div>
+        <div class="field"><label>Birth Weight (kg)</label><input type="number" step="0.01" id="baby-birth-weight" placeholder="3.2"></div>
+      </div>
+      <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+    <div style="padding:0 16px">
+
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-icon" style="background:var(--fern-bg)">☁️</div><div><div class="sr-title">Sync</div><div class="sr-sub" id="sync-status-text">Syncing in real-time</div></div></div>
+        <span class="pill p-fern">Active</span>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-icon" style="background:var(--honey-bg)">📴</div><div><div class="sr-title">Offline Mode</div><div class="sr-sub">Auto-saves locally</div></div></div>
+        <span class="pill p-honey">Auto</span>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-icon" style="background:#FFF0EE">🗑️</div><div><div class="sr-title">Clear All Data</div><div class="sr-sub">Cannot be undone</div></div></div>
+        <button class="btn-ghost" style="border-color:rgba(200,80,70,0.3);color:#C85040" onclick="clearData()">Clear</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin:28px 16px 0;color:var(--ink3);font-size:0.7rem;line-height:1.9;padding-bottom:12px">
+      petal — baby tracker<br>made with love 🌸
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ BOTTOM NAV ═══════ -->
+<div id="bottom-nav">
+  <div class="bnav">
+    <button class="bnav-item active" id="nav-home" onclick="goPage('pg-home',this)">
+      <div class="bnav-icon">🏠</div>
+      <div class="bnav-lbl">Home</div>
+    </button>
+    <button class="bnav-item" id="nav-analysis" onclick="goPage('pg-analysis',this)">
+      <div class="bnav-icon">📊</div>
+      <div class="bnav-lbl">Insights</div>
+    </button>
+    <button class="bnav-fab" onclick="openQuickLog()">
+      <div class="fab-circle">+</div>
+      <div class="bnav-lbl">Log</div>
+    </button>
+    <button class="bnav-item" id="nav-photos" onclick="goPage('pg-photos',this)">
+      <div class="bnav-icon">📸</div>
+      <div class="bnav-lbl">Photos</div>
+    </button>
+    <button class="bnav-item" id="nav-settings" onclick="goPage('pg-settings',this)">
+      <div class="bnav-icon">⚙️</div>
+      <div class="bnav-lbl">Settings</div>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════ QUICK LOG SHEET ═══════ -->
+<div class="sheet-overlay" id="ql-overlay" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Quick Log</div>
+    <div class="ql-grid">
+      <button class="ql-btn active" data-type="diaper" onclick="setQLType('diaper',this)"><span class="qe">👶</span>Diaper</button>
+      <button class="ql-btn" data-type="feeding" onclick="setQLType('feeding',this)"><span class="qe">🍼</span>Feeding</button>
+      <button class="ql-btn" data-type="sleep" onclick="setQLType('sleep',this)"><span class="qe">😴</span>Sleep</button>
+      <button class="ql-btn" data-type="pumping" onclick="setQLType('pumping',this)"><span class="qe">🤱</span>Pumping</button>
+      <button class="ql-btn" data-type="medication" onclick="setQLType('medication',this)"><span class="qe">💊</span>Meds</button>
+      <button class="ql-btn" data-type="growth" onclick="setQLType('growth',this)"><span class="qe">📏</span>Growth</button>
+    </div>
+    <div id="ql-form"></div>
+    <button class="btn-primary" style="margin-top:8px" onclick="quickSave()">Save Entry</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───
+let data={pin:null,pinSet:false,profile:{name:'',dob:'',birthWeight:'',avatar:''},logs:{diaper:[],feeding:[],sleep:[],pumping:[],medication:[],growth:[]},photos:[],visits:[]};
+let pinBuffer='',pinMode='enter',pendingPin='',visitPhotosBuffer=[];
+let currentPage='pg-home',prevPage='pg-home';
+let qlCurrentType='diaper';
+const STORAGE_KEY='bloom-baby-v1';
+
+// ─── STORAGE ───
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}syncCloud();}
+async function syncCloud(){try{await window.storage.set('baby-tracker-data',JSON.stringify(data),true);}catch(e){}}
+async function loadCloud(){try{const r=await window.storage.get('baby-tracker-data',true);if(r&&r.value){const d=JSON.parse(r.value);if(d&&d.logs){data=d;return true;}}}catch(e){}return false;}
+function loadLocal(){try{const s=localStorage.getItem(STORAGE_KEY)||localStorage.getItem('babygirl-tracker-v2')||localStorage.getItem('babygirl-tracker-v1');if(s){data=JSON.parse(s);return true;}}catch(e){}return false;}
+
+// ─── INIT ───
+async function init(){
+  loadLocal();
+  const cl=await loadCloud();if(cl)saveData();
+  if(!data.visits)data.visits=[];
+  if(!data.profile)data.profile={name:'',dob:'',birthWeight:'',avatar:''};
+  if(!data.profile.avatar)data.profile.avatar='';
+
+  const now=new Date(),iso=now.toISOString().slice(0,16),d10=now.toISOString().slice(0,10);
+  ['diaper-time','feeding-time','pump-time','med-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=iso;});
+  ['growth-date','visit-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=d10;});
+  const ss=document.getElementById('sleep-start');if(ss)ss.value=iso;
+  const td=document.getElementById('today-date');if(td)td.textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  updateOnlineStatus();
+  window.addEventListener('online',updateOnlineStatus);
+  window.addEventListener('offline',updateOnlineStatus);
+
+  unlockApp();return;
+
+  if(data.profile.name){
+    document.getElementById('baby-name').value=data.profile.name;
+    document.getElementById('baby-dob').value=data.profile.dob||'';
+    document.getElementById('baby-birth-weight').value=data.profile.birthWeight||'';
+  }
+  setInterval(async()=>{const c=await loadCloud();if(c)renderAll();},30000);
+}
+
+// ─── NAVIGATION ───
+function goPage(id,navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById(id);
+  pg.classList.add('active');
+  if(pg.scrollTop!==undefined)pg.scrollTop=0;
+  prevPage=currentPage;currentPage=id;
+  const navMap={'pg-home':'nav-home','pg-analysis':'nav-analysis','pg-photos':'nav-photos','pg-settings':'nav-settings'};
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  if(navMap[id]){const el=document.getElementById(navMap[id]);if(el)el.classList.add('active');}
+}
+function goBack(){goPage(prevPage||'pg-home');}
+
+// ─── PIN ───
+function pinPress(d){if(!d||pinBuffer.length>=4)return;pinBuffer+=d;updateDots();if(pinBuffer.length===4)setTimeout(processPin,200);}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updateDots();document.getElementById('pin-error').textContent='';}
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+function processPin(){
+  if(pinMode==='set'){pendingPin=pinBuffer;pinBuffer='';updateDots();pinMode='confirm';document.getElementById('pin-subtitle').textContent='Confirm your PIN';document.getElementById('pin-error').textContent='';}
+  else if(pinMode==='confirm'){if(pinBuffer===pendingPin){data.pin=pinBuffer;data.pinSet=true;saveData();unlockApp();}else{document.getElementById('pin-error').textContent="PINs don't match — try again";pinBuffer='';pendingPin='';pinMode='set';updateDots();document.getElementById('pin-subtitle').textContent='Create a 4-digit PIN';}}
+  else{if(pinBuffer===data.pin)unlockApp();else{document.getElementById('pin-error').textContent='Wrong PIN';pinBuffer='';updateDots();}}
+}
+function unlockApp(){
+  sessionStorage.setItem('bloom-unlocked','yes');
+  document.getElementById('pg-pin').style.display='none';
+  document.getElementById('bottom-nav').style.display='block';
+  goPage('pg-home');updateHeaderAge();renderAll();
+}
+function lockApp(){
+  sessionStorage.removeItem('bloom-unlocked');
+  document.getElementById('bottom-nav').style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-pin').style.display='flex';
+  document.getElementById('pg-pin').classList.add('active');
+  pinBuffer='';pinMode='enter';updateDots();
+  document.getElementById('pin-error').textContent='';
+  document.getElementById('pin-subtitle').textContent='Enter your PIN';
+}
+function changePin(){lockApp();pinMode='set';document.getElementById('pin-subtitle').textContent='Create a new PIN';}
+
+// ─── QUICK LOG ───
+function openQuickLog(){
+  setQLType('diaper',document.querySelector('.ql-btn[data-type="diaper"]'));
+  document.getElementById('ql-overlay').classList.add('open');
+}
+function closeSheet(e){if(!e||e.target===document.getElementById('ql-overlay'))document.getElementById('ql-overlay').classList.remove('open');}
+function setQLType(type,el){
+  qlCurrentType=type;
+  document.querySelectorAll('.ql-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const now=new Date().toISOString().slice(0,16);
+  const forms={
+    diaper:`<div class="form-grid cols2"><div class="field"><label>Type</label><select id="ql-dtype"><option value="wet">💧 Wet</option><option value="dirty">💩 Dirty</option><option value="both">Both</option></select></div><div class="field"><label>Notes</label><input type="text" id="ql-dnotes" placeholder="Optional"></div></div>`,
+    feeding:`<div class="form-grid cols2"><div class="field"><label>Type</label><select id="ql-ftype"><option value="breast-left">🤱 Breast L</option><option value="breast-right">🤱 Breast R</option><option value="bottle-breast">🍼 Bottle BM</option><option value="bottle-formula">🍼 Formula</option></select></div><div class="field"><label>Min / ml</label><input type="number" id="ql-famt" placeholder="15"></div></div>`,
+    sleep:`<div class="form-grid cols2"><div class="field"><label>Start</label><input type="datetime-local" id="ql-sstart" value="${now}"></div><div class="field"><label>End</label><input type="datetime-local" id="ql-send" value="${now}"></div></div>`,
+    pumping:`<div class="form-grid cols2"><div class="field"><label>Left ml</label><input type="number" id="ql-pleft" placeholder="0"></div><div class="field"><label>Right ml</label><input type="number" id="ql-pright" placeholder="0"></div></div>`,
+    medication:`<div class="form-grid cols2"><div class="field"><label>Medication</label><input type="text" id="ql-mname" placeholder="Vitamin D…"></div><div class="field"><label>Dose</label><input type="text" id="ql-mdose" placeholder="0.5ml"></div></div>`,
+    growth:`<div class="form-grid cols2"><div class="field"><label>Weight kg</label><input type="number" step="0.01" id="ql-gweight" placeholder="3.5"></div><div class="field"><label>Height cm</label><input type="number" step="0.1" id="ql-gheight" placeholder="50"></div></div>`
+  };
+  document.getElementById('ql-form').innerHTML=forms[type]||'';
+}
+function quickSave(){
+  const now=new Date().toISOString();let e={id:Date.now(),time:now};const t=qlCurrentType;
+  if(t==='diaper'){e.type=v('ql-dtype');e.notes=v('ql-dnotes');}
+  else if(t==='feeding'){e.type=v('ql-ftype');e.amount=v('ql-famt');}
+  else if(t==='sleep'){e.start=v('ql-sstart');e.end=v('ql-send');if(e.start&&e.end){const m=Math.round((new Date(e.end)-new Date(e.start))/60000);e.duration=m>0?m:0;}e.time=e.start||now;}
+  else if(t==='pumping'){e.left=v('ql-pleft');e.right=v('ql-pright');e.total=parseFloat(e.left||0)+parseFloat(e.right||0);}
+  else if(t==='medication'){e.name=v('ql-mname');e.dose=v('ql-mdose');e.who='baby';if(!e.name){showToast('⚠️ Enter medication name');return;}}
+  else if(t==='growth'){e.weight=v('ql-gweight');e.height=v('ql-gheight');e.date=new Date().toISOString().slice(0,10);e.time=e.date;}
+  data.logs[t].unshift(e);saveData();renderAll();
+  document.getElementById('ql-overlay').classList.remove('open');showToast('✓ Logged');
+}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+
+// ─── LOG ENTRY ───
+function logEntry(type){
+  const now=new Date().toISOString();let e={id:Date.now(),time:now};
+  if(type==='diaper'){e.type=v('diaper-type');e.notes=v('diaper-notes');e.time=v('diaper-time')||now;}
+  else if(type==='feeding'){e.type=v('feeding-type');e.amount=v('feeding-amount');e.notes=v('feeding-notes');e.time=v('feeding-time')||now;}
+  else if(type==='sleep'){e.start=v('sleep-start');e.end=v('sleep-end');e.location=v('sleep-location');e.notes=v('sleep-notes');if(e.start&&e.end){const m=Math.round((new Date(e.end)-new Date(e.start))/60000);e.duration=m>0?m:0;}e.time=e.start||now;}
+  else if(type==='pumping'){e.duration=v('pump-duration');e.left=v('pump-left');e.right=v('pump-right');e.total=parseFloat(e.left||0)+parseFloat(e.right||0);e.notes=v('pump-notes');e.time=v('pump-time')||now;}
+  else if(type==='medication'){e.name=v('med-name');e.dose=v('med-dose');e.who=v('med-who');e.notes=v('med-notes');e.time=v('med-time')||now;if(!e.name){showToast('⚠️ Enter medication name');return;}}
+  else if(type==='growth'){e.weight=v('growth-weight');e.height=v('growth-height');e.head=v('growth-head');e.age=v('growth-age');e.notes=v('growth-notes');e.date=v('growth-date');e.time=e.date||now;}
+  data.logs[type].unshift(e);saveData();renderAll();showToast('✓ Saved');
+}
+function deleteEntry(type,id){data.logs[type]=data.logs[type].filter(e=>e.id!==id);saveData();renderAll();showToast('Deleted');}
+
+// ─── RENDER ───
+function renderAll(){
+  renderHome();
+  ['diaper','feeding','sleep','pumping','medication','growth'].forEach(renderLog);
+  renderGrowthChart();renderActivityChart();
+  renderVisits();renderPhotos();updateHeaderAge();
+  // update analysis page stats
+  const td={d:data.logs.diaper.filter(e=>isToday(e.time)).length,f:data.logs.feeding.filter(e=>isToday(e.time)).length,s:data.logs.sleep.filter(e=>isToday(e.time)).length};
+  ['an-diapers'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.d;});
+  ['an-feedings'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.f;});
+  ['an-sleeps'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.s;});
+}
+
+function fmt(t){if(!t)return '';return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function isToday(t){return t&&new Date(t).toDateString()===new Date().toDateString();}
+
+function iconBg(type){return{diaper:'background:var(--blush-bg)',feeding:'background:var(--honey-bg)',sleep:'background:var(--plum-bg)',pumping:'background:var(--fern-bg)',medication:'background:var(--sky-bg)',growth:'background:var(--plum-bg)'}[type]||'background:var(--bg2)';}
+function accentCol(type){return{diaper:'var(--blush)',feeding:'var(--honey)',sleep:'var(--plum)',pumping:'var(--fern)',medication:'var(--sky)',growth:'var(--plum)'}[type]||'var(--accent)';}
+
+function getLabel(type,e){
+  if(type==='diaper'){const i={wet:'💧',dirty:'💩',both:'💩💧',dry:'✅'};return `${i[e.type]||'👶'} ${e.type||'change'}`;}
+  if(type==='feeding'){const l={'breast-left':'🤱 Breast L','breast-right':'🤱 Breast R','breast-both':'🤱 Both','bottle-breast':'🍼 Bottle BM','bottle-formula':'🍼 Formula'};return l[e.type]||'🍼 Feeding';}
+  if(type==='sleep')return `😴 ${e.duration?e.duration+'min':''} ${e.location||''}`.trim()||'😴 Sleep';
+  if(type==='pumping')return `🤱 ${e.total||0}ml`;
+  if(type==='medication')return `💊 ${e.name||''} ${e.who==='mom'?'(Mom)':''}`;
+  if(type==='growth')return `📏 ${e.weight||'?'}kg · ${e.height||'?'}cm`;
+  return type;
+}
+
+function renderHome(){
+  const td={d:data.logs.diaper.filter(e=>isToday(e.time)).length,f:data.logs.feeding.filter(e=>isToday(e.time)).length,s:data.logs.sleep.filter(e=>isToday(e.time)).length};
+  ['hs-diapers'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.d;});
+  ['hs-feedings'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.f;});
+  ['hs-sleeps'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=td.s;});
+  const nc=id=>document.getElementById(id);
+  const last=(t)=>data.logs[t].length?(isToday(data.logs[t][0].time)?getLabel(t,data.logs[t][0]):'No activity today'):'Tap to log';
+  if(nc('nc-diaper'))nc('nc-diaper').textContent=td.d>0?td.d+' logged today':last('diaper');
+  if(nc('nc-feeding'))nc('nc-feeding').textContent=td.f>0?td.f+' logged today':last('feeding');
+  if(nc('nc-sleep'))nc('nc-sleep').textContent=td.s>0?td.s+' sessions today':last('sleep');
+  if(nc('nc-pumping')){const p=data.logs.pumping.filter(e=>isToday(e.time)).length;nc('nc-pumping').textContent=p>0?p+' sessions today':last('pumping');}
+  const all=[];Object.entries(data.logs).forEach(([t,es])=>es.forEach(e=>all.push({...e,_t:t})));
+  all.sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const ra=document.getElementById('home-recent');if(!ra)return;
+  if(all.length===0){ra.innerHTML='<div class="empty"><div class="empty-icon">✦</div><p>Your activity will appear here</p></div>';return;}
+  ra.innerHTML='<div class="log-list">'+all.slice(0,5).map(e=>`
+    <div class="log-item">
+      <div class="li-icon" style="${iconBg(e._t)}">${getLabel(e._t,e).split(' ')[0]}</div>
+      <div class="li-body"><div class="li-title" style="color:${accentCol(e._t)}">${getLabel(e._t,e)}</div><div class="li-sub">${e._t}</div></div>
+      <div class="li-time">${fmt(e.time)||e.date||''}</div>
+    </div>`).join('')+'</div>';
+}
+
+function renderLog(type){
+  const c=document.getElementById(type+'-log');if(!c)return;
+  const items=data.logs[type],td=items.filter(e=>isToday(e.time));
+  const countEl=document.getElementById(type==='pumping'?'pump-count':type+'-count');if(countEl)countEl.textContent=td.length+' today';
+  const subEl=document.getElementById(type+'-count-sub'||(type==='pumping'?'pumping-count-sub':type+'-count-sub'));if(subEl)subEl.textContent=td.length+' today';
+  if(items.length===0){c.innerHTML='<div class="empty"><div class="empty-icon">'+{diaper:'👶',feeding:'🍼',sleep:'😴',pumping:'🤱',medication:'💊',growth:'📏'}[type]+'</div><p>Nothing yet</p></div>';return;}
+  c.innerHTML=(type==='growth'?items:items.slice(0,20)).map(e=>`
+    <div class="log-item">
+      <div class="li-icon" style="${iconBg(type)}">${getLabel(type,e).split(' ')[0]}</div>
+      <div class="li-body"><div class="li-title" style="color:${accentCol(type)}">${getLabel(type,e)}</div><div class="li-sub">${e.notes||e.dose||''}</div></div>
+      <div class="li-time">${fmt(e.time)||e.date||''}</div>
+      <button class="li-del" onclick="deleteEntry('${type}',${e.id})">✕</button>
+    </div>`).join('');
+}
+
+function renderGrowthChart(){
+  const area=document.getElementById('growth-chart-area');
+  const items=data.logs.growth.slice().reverse().filter(i=>i.weight);
+  if(!items.length)return;
+  area.innerHTML='<div>'+items.map(i=>`
+    <div class="growth-bar-row">
+      <div class="gbr-lbl">${i.age||i.date?.slice(5)||''}</div>
+      <div class="gbr-track"><div class="gbr-fill" style="width:${Math.min(100,(parseFloat(i.weight)||0)/10*100)}%;background:linear-gradient(90deg,var(--blush),var(--plum))">
+        <span>${i.weight}kg</span>
+      </div></div>
+    </div>`).join('')+'</div>';
+}
+
+function renderActivityChart(){
+  const el=document.getElementById('activity-chart');if(!el)return;
+  const hours=Array(24).fill(0).map((_,h)=>({h,c:0}));
+  Object.values(data.logs).flat().forEach(e=>{if(isToday(e.time))hours[new Date(e.time).getHours()].c++;});
+  const max=Math.max(1,...hours.map(h=>h.c));
+  el.innerHTML=hours.map(h=>`
+    <div class="bar-wrap">
+      <div class="bar" style="height:${Math.max(3,h.c/max*60)}px;background:${h.c>0?'var(--accent)':'var(--bg2)'}"></div>
+      ${h.h%6===0?`<div class="bar-lbl">${h.h}h</div>`:'<div style="height:8px"></div>'}
+    </div>`).join('');
+}
+
+// ─── AI ───
+async function runAnalysis(){
+  const el=document.getElementById('analysis-content');
+  el.innerHTML='<div class="ai-loading">Analyzing your data… <div class="ai-dots"><span></span><span></span><span></span></div></div>';
+  const s=buildSummary();
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`You are a helpful baby care assistant. Analyze this baby tracking data and provide warm, helpful insights for new parents. Be encouraging and specific. Format as JSON with fields: feeding_insight, sleep_insight, diaper_insight, pattern_insight, tip. Keep each under 80 words. Data: ${JSON.stringify(s)}`}]})});
+    const d=await res.json();
+    const p=JSON.parse(d.content?.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    el.innerHTML=[['🍼 Feeding',p.feeding_insight,'ib-warm'],['😴 Sleep',p.sleep_insight,'ib-warm'],['👶 Diapers',p.diaper_insight,'ib-warm'],['📊 Pattern',p.pattern_insight,'ib-warm'],['💡 Tip',p.tip,'ib-cool']]
+      .map(([t,tx,cls])=>`<div class="insight-block ${cls}"><div class="ib-title">${t}</div><div class="ib-text">${tx||'Log more to see insights.'}</div></div>`).join('');
+  }catch(e){
+    const s2=buildSummary();
+    el.innerHTML=`<div class="insight-block ib-warm"><div class="ib-title">Today</div><div class="ib-text">${s2.baby_name} had <span class="ib-hl">${s2.feedings_today} feedings</span>, <span class="ib-hl">${s2.diapers_today} diapers</span>, and <span class="ib-hl">${Math.round(s2.total_sleep_min/60*10)/10}h sleep</span>.</div></div><div class="insight-block ib-cool"><div class="ib-title">💡 Tip</div><div class="ib-text">Connect to internet for AI-powered insights by Claude 🌸</div></div>`;
+  }
+}
+function buildSummary(){
+  const td=data.logs.diaper.filter(e=>isToday(e.time)),tf=data.logs.feeding.filter(e=>isToday(e.time)),ts=data.logs.sleep.filter(e=>isToday(e.time));
+  return{diapers_today:td.length,feedings_today:tf.length,sleep_sessions:ts.length,total_sleep_min:ts.reduce((s,e)=>s+(e.duration||0),0),pump_ml:data.logs.pumping.filter(e=>isToday(e.time)).reduce((s,e)=>s+(e.total||0),0),baby_name:data.profile?.name||'Baby'};
+}
+
+// ─── PHOTOS ───
+function setAvatar(event){const file=event.target.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{data.profile.avatar=e.target.result;saveData();const av=document.getElementById('home-avatar');if(av)av.innerHTML=`<img src="${e.target.result}" alt="baby">`;showToast('📸 Photo updated');};r.readAsDataURL(file);}
+function addPhoto(event){const file=event.target.files[0];if(!file)return;const cap=document.getElementById('photo-caption')?.value||'';const r=new FileReader();r.onload=e=>{data.photos.push({id:Date.now(),src:e.target.result,caption:cap,date:new Date().toLocaleDateString()});saveData();renderPhotos();const pc=document.getElementById('photo-caption');if(pc)pc.value='';showToast('📸 Added');};r.readAsDataURL(file);}
+function renderPhotos(){
+  const grid=document.getElementById('photo-grid');if(!grid)return;
+  const sub=document.getElementById('photos-sub');if(sub)sub.textContent=data.photos.length+' photos';
+  grid.innerHTML='<div class="photo-add" onclick="document.getElementById(\'photo-upload\').click()"><div class="pa-icon">📷</div><div class="pa-lbl">Add Photo</div></div>'+
+    data.photos.map(p=>`<div style="position:relative"><img class="photo-thumb" src="${p.src}" alt="${p.caption||''}"><div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.65));padding:4px 6px;border-radius:0 0 12px 12px;font-size:0.55rem;color:rgba(255,255,255,0.85);">${p.caption||p.date||''}</div></div>`).join('');
+}
+
+// ─── AGE ───
+function calcAge(dob){
+  if(!dob)return '';const birth=new Date(dob),now=new Date(),ms=now-birth;
+  if(ms<0)return 'Not born yet';
+  const days=Math.floor(ms/86400000);
+  if(days<7)return days===0?'Born today 🎉':`${days} day${days>1?'s':''} old`;
+  const weeks=Math.floor(days/7);if(weeks<8)return `${weeks} week${weeks>1?'s':''} old`;
+  const months=Math.floor(days/30.44);
+  if(months<24){const rw=Math.floor((days-months*30.44)/7);return `${months} month${months>1?'s':''}${rw>0?' '+rw+'w':''} old`;}
+  const years=Math.floor(months/12),rm=months%12;return `${years} yr${rm>0?' '+rm+'mo':''} old`;
+}
+function updateHeaderAge(){
+  const name=data.profile?.name||'Baby Girl',age=calcAge(data.profile?.dob);
+  const hn=document.getElementById('home-name');if(hn)hn.textContent=name;
+  const hat=document.getElementById('home-age-text');if(hat)hat.textContent=age;
+  const ha=document.getElementById('home-age');if(ha)ha.style.display=age?'inline-flex':'none';
+  if(data.profile?.avatar){const av=document.getElementById('home-avatar');if(av)av.innerHTML=`<img src="${data.profile.avatar}" alt="baby">`;}
+}
+function saveProfile(){
+  data.profile.name=v('baby-name');data.profile.dob=v('baby-dob');data.profile.birthWeight=v('baby-birth-weight');
+  saveData();updateHeaderAge();showToast('Profile saved');
+}
+
+// ─── ONLINE ───
+function updateOnlineStatus(){
+  const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-lbl'),st=document.getElementById('sync-status-text');
+  if(navigator.onLine){if(dot)dot.className='sdot';if(lbl)lbl.textContent='Live';if(st)st.textContent='Syncing in real-time';}
+  else{if(dot)dot.className='sdot off';if(lbl)lbl.textContent='Offline';if(st)st.textContent='Saved locally';}
+}
+
+// ─── CLEAR ───
+function clearData(){
+  if(confirm('Delete ALL data? This cannot be undone!')){
+    const{pin,pinSet}=data;
+    data={pin,pinSet,profile:{name:'',dob:'',birthWeight:'',avatar:''},logs:{diaper:[],feeding:[],sleep:[],pumping:[],medication:[],growth:[]},photos:[],visits:[]};
+    saveData();renderAll();showToast('All data cleared');
+  }
+}
+
+// ─── VISITS ───
+function addVisitPhotos(event){
+  const files=Array.from(event.target.files),prev=document.getElementById('visit-photo-previews');
+  files.forEach(file=>{const r=new FileReader();r.onload=e=>{visitPhotosBuffer.push({src:e.target.result});prev.innerHTML=visitPhotosBuffer.map((p,i)=>`<div style="position:relative"><img src="${p.src}" style="width:68px;height:68px;border-radius:10px;object-fit:cover"><button onclick="rmvp(${i})" style="position:absolute;top:-4px;right:-4px;background:var(--blush);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;cursor:pointer">×</button></div>`).join('');};r.readAsDataURL(file);});
+}
+function rmvp(i){visitPhotosBuffer.splice(i,1);const prev=document.getElementById('visit-photo-previews');prev.innerHTML=visitPhotosBuffer.map((p,j)=>`<div style="position:relative"><img src="${p.src}" style="width:68px;height:68px;border-radius:10px;object-fit:cover"><button onclick="rmvp(${j})" style="position:absolute;top:-4px;right:-4px;background:var(--blush);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;cursor:pointer">×</button></div>`).join('');}
+function logVisit(){
+  const date=v('visit-date');if(!date){showToast('⚠️ Enter a date');return;}
+  data.visits.unshift({id:Date.now(),date,type:v('visit-type'),doctor:v('visit-doctor'),weight:v('visit-weight'),height:v('visit-height')||'',notes:v('visit-notes'),photos:[...visitPhotosBuffer]});
+  visitPhotosBuffer=[];document.getElementById('visit-photo-previews').innerHTML='';
+  ['visit-notes','visit-doctor','visit-weight','visit-height'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  saveData();renderVisits();showToast('Visit saved');
+}
+function deleteVisit(id){data.visits=data.visits.filter(vv=>vv.id!==id);saveData();renderVisits();showToast('Deleted');}
+function renderVisits(){
+  const c=document.getElementById('visit-log'),ce=document.getElementById('visit-count'),sub=document.getElementById('visits-sub');
+  const count=(data.visits||[]).length;
+  if(ce)ce.textContent=count+' visits';if(sub)sub.textContent=count+' records';
+  if(!count){c.innerHTML='<div class="empty"><div class="empty-icon">🏥</div><p>No visits logged yet</p></div>';return;}
+  const tl={checkup:'🩺 Well-Baby',nurse:'👩‍⚕️ Nurse',sick:'🤒 Sick',vaccine:'💉 Vaccine',specialist:'🔬 Specialist',other:'📋 Other'};
+  c.innerHTML=data.visits.map(vv=>`
+    <div class="visit-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div><div style="font-weight:600;font-size:0.88rem">${tl[vv.type]||vv.type}</div><div style="font-size:0.7rem;color:var(--ink3);margin-top:2px">📅 ${vv.date}${vv.doctor?' · '+vv.doctor:''}</div></div>
+        <button class="li-del" onclick="deleteVisit(${vv.id})">✕</button>
+      </div>
+      ${vv.weight?`<div style="display:flex;gap:8px;margin-bottom:8px"><span class="pill p-blush">⚖️ ${vv.weight}kg</span>${vv.height?`<span class="pill p-plum">📏 ${vv.height}cm</span>`:''}</div>`:''}
+      ${vv.notes?`<div style="font-size:0.8rem;line-height:1.55;color:var(--ink2);background:var(--surface);border-radius:10px;padding:10px;margin-bottom:8px;border:1.5px solid var(--border)">${vv.notes}</div>`:''}
+      ${vv.photos?.length?`<div><div style="font-size:0.62rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">📎 ${vv.photos.length} attached</div><div style="display:flex;gap:7px;flex-wrap:wrap">${vv.photos.map(p=>`<img src="${p.src}" style="width:76px;height:76px;border-radius:10px;object-fit:cover;cursor:pointer;border:1.5px solid var(--border)" onclick="viewPhoto('${p.src}')">`).join('')}</div></div>`:''}</div>`).join('');
+}
+function viewPhoto(src){const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(26,20,16,0.95);display:flex;align-items:center;justify-content:center;cursor:zoom-out';o.innerHTML=`<img src="${src}" style="max-width:95vw;max-height:90vh;border-radius:14px;object-fit:contain">`;o.onclick=()=>document.body.removeChild(o);document.body.appendChild(o);}
+
+// ─── TOAST ───
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+init();
+</script>
+</body>
+</html>
