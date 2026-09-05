@@ -3,6 +3,47 @@
 An agent that finds defects in RF is Simple, and the harness that makes it
 possible for an agent to find them at all.
 
+## First: what "an agent" actually means here
+
+It is a **text file**: `.claude/agents/rf-qa.md`. Nothing is running in the
+background, nothing is installed, nothing costs anything until you ask for it.
+
+The file contains instructions for a QA specialist — what to look at, what
+counts as serious, what numbers it should already know, and how to write up
+what it finds. When you open this repository in Claude Code and say:
+
+```
+Use the rf-qa agent to QA the app
+```
+
+Claude Code reads that file, starts a fresh Claude with those instructions and
+only the tools the file allows, and hands it the job. It runs the test script,
+reads the results, exports the screenshots and **looks at them**, tries inputs
+nobody wrote a test for, and writes `.qa/REPORT.md`. Then it goes away.
+
+Think of it as a checklist that can read, run commands and look at pictures —
+not a service, not a bot, not something with a lifecycle to manage.
+
+### Three separate things, easy to confuse
+
+| Thing | What it is | Runs when |
+| --- | --- | --- |
+| `Scripts/qa/reference_model.py` | A Python program. Does the RF maths a second, independent way. | You run it, or `run-qa.sh` does |
+| `RFIsSimpleUITests/` | Swift test code. Drives the app in the simulator and takes screenshots. | Every `⌘U`, or `run-qa.sh` |
+| `.claude/agents/rf-qa.md` | The agent. Reads what the other two produced and judges it. | Only when you ask Claude Code for it |
+
+The first two are automation: they always check exactly the same things. The
+third is the part that can notice something nobody thought to check.
+
+### Why bother with the third one
+
+Because automation only ever finds what its author anticipated. A test suite
+written by the person who wrote the code cannot catch that person
+misremembering a formula — the mistake is in both halves. An agent that has
+been handed an independent implementation, a pile of screenshots and the
+instruction "a wrong number is the worst thing that can happen here" can catch
+what the suite structurally cannot.
+
 ## The problem it solves
 
 An agent given only "test the app" will run `xcodebuild test`, see green, and
