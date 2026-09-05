@@ -11,22 +11,37 @@ struct CalculatorDetailView: View {
         switch descriptor.id {
         case .powerConverter:
             PowerConverterView()
+        case .voltagePowerImpedance:
+            VoltagePowerImpedanceView()
         case .wavelength:
             WavelengthCalculatorView()
+        case .freeSpacePathLoss:
+            FreeSpacePathLossView()
+        case .linkBudget:
+            LinkBudgetView()
+        case .thermalNoise:
+            ThermalNoiseView()
+        case .receiverSensitivity:
+            ReceiverSensitivityView()
         case .reflectionConverter:
             ReflectionConverterView()
-        case .voltagePowerImpedance, .freeSpacePathLoss, .linkBudget, .thermalNoise,
-             .receiverSensitivity, .cascadedGainNoiseFigure, .eirp, .effectiveAperture,
-             .farFieldDistance:
-            ComingSoonView(descriptor: descriptor)
+        case .cascadedGainNoiseFigure:
+            CascadeView()
+        case .eirp:
+            RadiatedPowerView()
+        case .effectiveAperture:
+            EffectiveApertureView()
+        case .farFieldDistance:
+            FarFieldDistanceView()
         }
     }
 }
 
 /// Shown for a calculator that is listed but not yet implemented.
 ///
-/// It says so plainly and points at the reference pages that cover the same
-/// ground, rather than pretending to calculate.
+/// Nothing uses this today — every calculator in the MVP list calculates — but
+/// it is the landing place for the next `CalculatorID` added ahead of its
+/// implementation, and it keeps that state honest rather than pretending.
 struct ComingSoonView: View {
     let descriptor: CalculatorDescriptor
 
@@ -57,16 +72,16 @@ struct ComingSoonView: View {
     }
 }
 
-#Preview("Planned") {
+#Preview("Reflection") {
     NavigationStack {
-        CalculatorDetailView(descriptor: CalculatorID.linkBudget.descriptor)
+        CalculatorDetailView(descriptor: CalculatorID.reflectionConverter.descriptor)
     }
     .environment(PreferencesStore.preview)
 }
 
-#Preview("Implemented") {
+#Preview("Link budget") {
     NavigationStack {
-        CalculatorDetailView(descriptor: CalculatorID.reflectionConverter.descriptor)
+        CalculatorDetailView(descriptor: CalculatorID.linkBudget.descriptor)
     }
     .environment(PreferencesStore.preview)
 }
