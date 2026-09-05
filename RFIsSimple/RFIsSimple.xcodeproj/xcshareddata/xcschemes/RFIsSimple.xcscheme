@@ -39,6 +39,16 @@
                ReferencedContainer = "container:RFIsSimple.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "1A000000000000000000001B"
+               BuildableName = "RFIsSimpleUITests.xctest"
+               BlueprintName = "RFIsSimpleUITests"
+               ReferencedContainer = "container:RFIsSimple.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
