@@ -34,8 +34,13 @@ struct ContentIntegrityTests {
         }
     }
 
-    @Test func thePhaseOneCalculatorsAreTheImplementedOnes() {
-        #expect(Set(CalculatorCatalog.available.map(\.id)) == [.powerConverter, .wavelength, .reflectionConverter])
+    /// Every calculator in the MVP list (spec §5) now calculates. If one is
+    /// ever added ahead of its implementation this fails, which is the prompt
+    /// to mark it `.planned` deliberately rather than by accident.
+    @Test func everyListedCalculatorIsImplemented() {
+        let planned = CalculatorCatalog.all.filter { !$0.isAvailable }
+        #expect(planned.isEmpty, "Not implemented: \(planned.map(\.title).joined(separator: ", "))")
+        #expect(CalculatorCatalog.available.count == 12)
     }
 
     @Test func quickCalculationsAreRealCalculators() {

@@ -20,7 +20,7 @@ Swift toolchain and no Xcode, so the first build has to happen on a Mac. What
 | Runs on iPhone in portrait | **Unverified.** Portrait is locked in the build settings. |
 | All four tabs functional | Implemented. |
 | Search returns calculators, reference items and aliases | Implemented, covered by `SearchIndexTests`. |
-| Three calculators correct, invalid input handled safely | Implemented; every expected value in the tests was cross-checked against an independent calculation. |
+| Calculators correct, invalid input handled safely | All twelve implemented; every expected value in the tests was cross-checked against an independent calculation. |
 | Light, Dark and large Dynamic Type usable | Built for it — semantic colours throughout, input rows relayout at accessibility sizes. Needs a visual pass. |
 | Works in airplane mode | **Verified structurally**: the app makes no network calls. |
 | No account, backend, analytics, ads or third-party dependency | **Verified**: the only imports anywhere are `Foundation`, `SwiftUI`, `UIKit`, `Observation` and `Testing`. |
@@ -46,17 +46,22 @@ brew install xcodegen && xcodegen generate
 
 ## What works
 
-Three calculators are fully implemented:
+All twelve calculators from §5 of the spec are implemented:
 
 | Calculator | Behaviour |
 | --- | --- |
-| **Power Converter** | dBm, dBW, W, mW, µW. 0 W correctly reports that it has no decibel value instead of showing `-inf`. |
+| **Power Converter** | dBm, dBW, W, mW, µW. 0 W reports that it has no decibel value instead of showing `-inf`. |
+| **Voltage / Power / Impedance** | RMS volts ↔ watts at 50 Ω, 75 Ω or any positive impedance. Peak-to-peak and dBµV included. |
 | **Frequency / Period / Wavelength** | Solve from any of the three, with an optional velocity factor. Quarter wavelength included; the propagation velocity used is always shown. |
-| **Reflection Converter** | Solve from VSWR, return loss, \|Γ\|, reflected power or mismatch loss. Infinite quantities (return loss of a perfect match, VSWR of a total reflection) are shown as a dash with the reason. |
-
-The other nine calculators from §5 of the spec are listed with their categories,
-aliases and related reading, and open a screen that says plainly that they are
-planned. Nothing pretends to calculate.
+| **Free-Space Path Loss** | From frequency and distance, with the wavelength and the λ/4π limit below which the model stops applying. |
+| **Link Budget** | Transmit side, path and receive side, ending in the margin above sensitivity. |
+| **Thermal Noise** | kTB in a bandwidth, the −174 dBm/Hz density, and the receiver floor when a noise figure is given. |
+| **Receiver Sensitivity** | From bandwidth, noise figure and required SNR, with the equivalent noise temperature. |
+| **Reflection Converter** | Solve from VSWR, return loss, \|Γ\|, reflected power or mismatch loss. Infinite quantities are shown as a dash with the reason. |
+| **Cascaded Gain & Noise Figure** | A reorderable, deletable list of stages, with each stage's share of the excess noise. |
+| **EIRP / ERP** | Transmit power, feed loss and antenna gain in dBi or dBd. |
+| **Effective Antenna Aperture** | From frequency and gain, in m² and cm², with the equivalent dish diameter. |
+| **Far-Field Distance** | Reactive, Fraunhofer and λ/2π boundaries, and the conservative distance to measure at. |
 
 Alongside them are **37 reference pages** across all seven categories, each
 following the §7 template, and a search index covering titles, aliases,
