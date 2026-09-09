@@ -11,45 +11,37 @@ to take a couple of rounds.
 
 ## Part 1 — Give it its own repo
 
-Do this once. Right now the code sits in a branch of the `Baby-tracker` repo,
+Do this once. The code was written into a branch of the `Baby-tracker` repo,
 which is not where a new product should live.
+
+The rearranging is already done. The `rf-is-simple-root` branch of
+`Baby-tracker` holds this project with the app at the top level — all four
+commits, their history intact, `RFIsSimple.xcodeproj` at the root where Xcode
+expects it. All that is left is to move it to a repo of its own.
 
 ### 1.1 Create the empty repo
 
 On GitHub: **New repository** → name it `rf-is-simple` → **Private** →
 **do not** tick "Add a README", ".gitignore" or "licence". It must be
-completely empty.
+completely empty, or the push in the next step will be rejected.
 
-(I could not do this for you: the GitHub app attached to my session can read
-and write repositories it has been granted, but it is not permitted to create
-new ones — it returns `403 Resource not accessible by integration`.)
+This is the one step that cannot be automated from here: the GitHub app
+attached to a Claude Code session can read and write repositories it has been
+granted, but is not permitted to create new ones — it returns
+`403 Resource not accessible by integration`.
 
-### 1.2 Move the code across, keeping its history
+### 1.2 Move it across
 
 ```bash
-# Pull down the branch the code currently lives in
-git clone -b claude/rf-simple-app-architecture-kdfu49 \
-    https://github.com/omrirosn/Baby-tracker.git rf-tmp
-
-# Lift the RFIsSimple/ subdirectory out as its own history
-cd rf-tmp
-git subtree split --prefix=RFIsSimple -b rf-only
-cd ..
-
-# Make the new repo out of it
-mkdir rf-is-simple && cd rf-is-simple
-git init -b main
-git pull ../rf-tmp rf-only
-git remote add origin git@github.com:omrirosn/rf-is-simple.git
+git clone -b rf-is-simple-root \
+    https://github.com/omrirosn/Baby-tracker.git rf-is-simple
+cd rf-is-simple
+git branch -m main
+git remote set-url origin https://github.com/omrirosn/rf-is-simple.git
 git push -u origin main
-
-# Tidy up
-cd .. && rm -rf rf-tmp
 ```
 
-`git subtree split` rewrites the three commits so that what was
-`RFIsSimple/README.md` becomes `README.md`. You end up with
-`RFIsSimple.xcodeproj` at the top level, where Xcode expects it.
+That is the whole migration. No subtree commands, no temporary directories.
 
 ### 1.3 Check it looks right
 
@@ -57,12 +49,16 @@ cd .. && rm -rf rf-tmp
 ls
 # .gitignore  README.md  RFIsSimple/  RFIsSimple.xcodeproj/
 # RFIsSimpleTests/  RFIsSimpleUITests/  Scripts/  docs/  project.yml
+
+git log --oneline
+# 4 commits, oldest "Add RF is Simple Phase 1..."
 ```
 
-### 1.4 Clean up the old branch
+### 1.4 Clean up
 
-On GitHub, delete the `claude/rf-simple-app-architecture-kdfu49` branch from
-`Baby-tracker`. The baby tracker should not be carrying an RF app around.
+On GitHub, delete both branches from `Baby-tracker`:
+`claude/rf-simple-app-architecture-kdfu49` and `rf-is-simple-root`. The baby
+tracker should not be carrying an RF app around.
 
 ---
 
